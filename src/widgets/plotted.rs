@@ -46,15 +46,57 @@ impl<T> DerefMut for Plotted<T> {
     }
 }
 
+pub trait ValueMapped {
+    fn extract_value(&self, i: usize) -> Value;
+    fn extract_f64(&self) -> f64;
+}
+
+macro_rules! impl_num {
+    ($ty:ty) => {
+        impl ValueMapped for $ty
+        {
+            fn extract_value(&self, i: usize) -> Value {
+                Value::new(i as f64, self.extract_f64())
+            }
+
+            fn extract_f64(&self) -> f64 {
+                *self as f64
+            }
+        }
+    }
+}
+
+impl_num!(f32);
+impl_num!(f64);
+impl_num!(i8);
+impl_num!(i16);
+impl_num!(i32);
+impl_num!(i64);     // truncates
+impl_num!(isize);   // truncates
+impl_num!(u8);
+impl_num!(u16);
+impl_num!(u32);
+impl_num!(u64);     // truncates
+impl_num!(usize);   // truncates
+
+impl<X: ValueMapped, Y: ValueMapped> ValueMapped for (X, Y) {
+    fn extract_value(&self, i: usize) -> Value {
+        Value::new(self.0.extract_f64(), self.1.extract_f64())
+    }
+
+    fn extract_f64(&self) -> f64 {
+        unimplemented!()
+    }
+}
+
 impl<T, E> Inspectable for Plotted<T>
     where for<'a> &'a T: IntoIterator<Item=&'a E>,
-          E: Copy + Into<f64>
+          E: ValueMapped
 {
     type Attributes = PlottedAttributes;
 
     fn ui(&mut self, ui: &mut egui::Ui, options: Self::Attributes, context: &Context) -> bool {
-        let x = self.0.into_iter().enumerate().map(|(i, &y)| Value::new(i as f64, y));
-        let values = Values::from_values_iter(x);
+        let values = Values::from_values_iter(self.into_iter().enumerate().map(|(i, e)| e.extract_value(i)));
         let mut plot = match options.plot_type {
             PlotType::Line => {
                 Plot::new("lines_demo")
@@ -63,7 +105,7 @@ impl<T, E> Inspectable for Plotted<T>
             PlotType::Scatter => {
                 Plot::new("lines_demo")
                     .points(Points::new(values).radius(3.0))
-            },
+            }
             PlotType::Histogram => {
                 unimplemented!();
             }
@@ -73,6 +115,3 @@ impl<T, E> Inspectable for Plotted<T>
         false
     }
 }
-
-// TODO: separate values extractor incl for (K, V)
-// https://stackoverflow.com/questions/40392524/conflicting-trait-implementations-even-though-associated-types-differ
