@@ -1,7 +1,5 @@
-use std::iter::FromIterator;
 use std::time::Duration;
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 use bevy_inspector_egui::widgets::Plotted;
 use bevy_inspector_egui::{Inspectable, InspectorPlugin};
 
@@ -10,10 +8,16 @@ use bevy_inspector_egui::{Inspectable, InspectorPlugin};
 struct SomeData {
     a: f32,
     float_vec: Plotted<Vec<f64>>,
+    #[inspectable(scatter)]
     int_vec: Plotted<Vec<i8>>,
+    #[inspectable(scatter)]
     float_arr: Plotted<[f32; 5]>,
     xy_pairs: Plotted<Vec<(f64, f64)>>,
     ty_pairs: Plotted<Vec<(Duration, f64)>>,
+    #[inspectable(histogram)]
+    hist: Plotted<Vec<f64>>,
+    #[inspectable(kde)]
+    density: Plotted<Vec<f64>>,
 }
 
 impl Default for SomeData {
@@ -25,6 +29,8 @@ impl Default for SomeData {
             float_arr: Plotted([5.0, 2.0, 3.0, 4.0, 1.0]),
             xy_pairs: Plotted(vec![(-1.0, 0.3), (0.0, 0.2), (1.0, 0.1)]),
             ty_pairs: Plotted(vec![(Duration::from_secs_f64(15.0), 0.3), (Duration::from_secs_f64(20.4), 0.2), (Duration::from_secs_f64(23.6), 0.1)]),
+            hist: Plotted(vec![1.0, 2.0, 1.0, 1.0, 2.0, 3.0, 4.9, 5.0]),
+            density: Plotted(vec![1.0, 2.0, 1.0, 1.0, 2.0, 3.0, 4.9, 5.0]),
         }
     }
 }
