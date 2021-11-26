@@ -1,4 +1,5 @@
 use std::ops::{Deref, DerefMut};
+use std::time::Duration;
 
 use crate::{Context, Inspectable};
 use bevy_egui::egui::{self, Id, Vec2};
@@ -78,6 +79,16 @@ impl_num!(u16);
 impl_num!(u32);
 impl_num!(u64);     // truncates
 impl_num!(usize);   // truncates
+
+impl ValueMapped for Duration {
+    fn extract_value(&self, i: usize) -> Value {
+        Value::new(i as f64, self.extract_f64())
+    }
+
+    fn extract_f64(&self) -> f64 {
+        self.as_secs_f64()
+    }
+}
 
 impl<X: ValueMapped, Y: ValueMapped> ValueMapped for (X, Y) {
     fn extract_value(&self, i: usize) -> Value {
